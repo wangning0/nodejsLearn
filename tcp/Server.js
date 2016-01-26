@@ -1,0 +1,37 @@
+var net=require('net');
+var server=net.createServer({allowHalfOpen:true});
+server.on('connection',function(socket){
+  console.log('客户端已经连接到服务器');
+  socket.setEncoding('utf8');
+  socket.on('data',function(data){
+    console.log('接收到客户端发送的数据为:'+data);
+    socket.write('确认数据:'+data);
+  });
+  socket.on('error',function(err){
+    console.log('与客户端通信过程中发生错误，错误码为%s',err.code);
+    socket.destroy();
+  });
+  socket.on('end',function(){
+    console.log('客户端连接被关闭');
+    socket.end();
+    //客户端连接全部关闭的时候退出引用程序
+    server.unref();
+  });
+  socket.on('close',function(has_error){
+    if(has_error){
+      console.log('由于一个错误导致socket连接被关闭');
+      server.unref();
+    }else{
+      console.log('socket连接正常关闭');
+    }
+  });
+});
+server.getConnections(function(err,count){
+  if(count==2){
+    server.close();
+  }
+});
+server.listen(2000,'localhost');
+server.on('close',function(){
+  console.log('TCP服务器被关闭');
+});

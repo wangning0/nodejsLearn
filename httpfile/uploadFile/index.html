@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>文件上传</title>
+	<link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+</head>
+<body>
+	<br>
+	<br>
+	<div class="wrap">
+		<div class="form-group">
+			<label for="upload">
+				<input type="file" id="upload" onchange="fileSelect()">
+			</label>
+			<label for="">
+			</label>
+		</div>
+		<div class="form-group">
+			<label for="btn">
+				<button class="btn btn-primary" onclick="uploadFile()">上传文件</button>
+			</label>
+		</div>
+		<table class="table table-striped">
+			<tr>
+				<td>文件名</td>
+				<td>文件大小</td>
+				<td>文件类型</td>
+			</tr>
+			<tr>
+				<td id="fileName"></td>
+				<td id="fileSize"></td>
+				<td id="fileStyle"></td>
+			</tr>
+		</table>
+		<table class="table table-striped">
+			<tr>
+				<td>当前速度</td>
+				<td>剩余时间估算</td>
+				<td>当前进度</td>
+			</tr>
+			<tr>
+				<td id="speed"></td>
+				<td id="time"></td>
+				<td id="stage"></td>
+			</tr>
+		</table>
+		<div class="progress">
+		  <div class="progress-bar" id="progressbar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+		  </div>
+		</div>
+		<div id="finish"></div>
+	</div>
+	<script>
+		function change(size){
+			if( size > 1024*1024 ){
+				size = Math.round(size/(1024*1024)) + 'MB';
+			} else {
+				size = Math.round(size/(1024)) + 'KB';
+			}
+			return size;
+		}
+		function fileSelect(){
+			var file = document.querySelector('#upload').files[0];
+			document.querySelector('#fileName').innerHTML = file.name;
+			document.querySelector('#fileSize').innerHTML = change(file.size);
+			document.querySelector('#fileStyle').innerHTML = file.type;
+		}
+		function load(){
+			document.querySelector('#finish').innerHTML = '加载成功'
+		}
+		function error(){
+			document.querySelector('#finish').innerHTML = '加载失败，出错'
+		}
+		function abort(){
+			document.querySelector('#finish').innerHTML = '加载失败，中断'
+		}
+		var last = 0;
+		function progress(e){
+			var percent = Math.round(e.loaded*100/e.total);
+			document.querySelector('#progressbar')['aria-valuenow'] = percent;
+			document.querySelector('#progressbar').style.width = percent+'%';
+			var speed = e.loaded - last;
+			last = e.loaded;
+			var stage = e.loaded;
+			var time = ((e.total - e.loaded)/speed).toFixed(1) + 's';
+			document.querySelector('#speed').innerHTML = change(speed)+'/s';
+			document.querySelector('#time').innerHTML = time;
+			document.querySelector('#stage').innerHTML = change(stage);
+		}
+		function uploadFile(){
+			last = 0;
+			document.querySelector('#progressbar')['aria-valuenow'] = 0;
+			document.querySelector('#progressbar').style.width = '0%';
+			var form = new FormData();
+			var file = document.querySelector('#upload').files[0];
+			form.append('file',file);
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST','/post');
+			xhr.upload.addEventListener('progress',progress,false);
+			xhr.addEventListener('load',load,false);
+			xhr.addEventListener('error',error,false);
+			xhr.addEventListener('abort',abort,false);
+			xhr.send(form);
+			console.log(form);
+		}
+
+	</script>
+</body>
+</html>
